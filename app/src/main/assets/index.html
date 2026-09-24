@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1018">
+  <meta name="color-scheme" content="dark light">
+  <title>AnimeGo</title>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="stylesheet" href="css/all.min.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body class="theme-dark">
+  <div id="app">
+    <header class="topbar">
+      <button class="icon-button" id="backBtn" aria-label="Kembali"><i class="fa-solid fa-chevron-left"></i></button>
+      <div class="brand">AnimeGo</div>
+      <div class="topbar-actions"><button class="icon-button" id="themeBtn" aria-label="Ubah tema"><i class="fa-solid fa-sun"></i></button><button class="icon-button" id="searchBtn" aria-label="Cari"><i class="fa-solid fa-magnifying-glass"></i></button></div>
+    </header>
+
+    <main id="screen" class="screen"></main>
+    <div id="playerDock" class="player-dock hidden"></div>
+
+    <nav class="bottom-nav" id="bottomNav" aria-label="Navigasi utama">
+      <button data-route="home"><span class="nav-icon"><i class="fa-solid fa-house"></i></span><small>Beranda</small></button>
+      <button data-route="browse"><span class="nav-icon"><i class="fa-solid fa-compass"></i></span><small>Jelajah</small></button>
+      <button data-route="offline"><span class="nav-icon"><i class="fa-solid fa-download"></i></span><small>Offline</small></button>
+      <button data-route="history"><span class="nav-icon"><i class="fa-solid fa-clock-rotate-left"></i></span><small>Riwayat</small></button>
+      <button data-route="favorites"><span class="nav-icon"><i class="fa-solid fa-heart"></i></span><small>Favorit</small></button>
+    </nav>
+
+    <div id="toast" class="toast" role="status"></div>
+    <div id="modal" class="modal hidden"></div>
+  </div>
+  <script src="script/native.js"></script>
+  <script src="script/router.js"></script>
+  <script src="script/ui.js"></script>
+  <script src="script/player.js"></script>
+  <script src="script/downloads.js"></script>
+  <script src="script/views.js"></script>
+  <script src="script/app.js"></script>
+</body>
+</html>
