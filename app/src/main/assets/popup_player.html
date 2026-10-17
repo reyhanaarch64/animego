@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<link rel="stylesheet" href="css/all.min.css">
+<title>AnimeGo Floating Player</title>
+<style>
+:root{--blue:#58afff;--panel:rgba(11,17,27,.94);--muted:rgba(255,255,255,.68);--line:rgba(255,255,255,.13)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input{font:inherit}button{border:0;color:inherit;cursor:pointer}
+#root{position:fixed;inset:0;overflow:hidden;border-radius:18px;background:#05070b;border:1px solid rgba(255,255,255,.18);box-shadow:0 12px 38px rgba(0,0,0,.42)}
+#video{position:absolute;left:0;right:0;top:39px;bottom:54px;width:100%;height:calc(100% - 93px);object-fit:contain;background:#05070b;z-index:1}
+#surface{position:absolute;left:0;right:0;top:39px;bottom:54px;width:100%;height:auto;background:transparent;z-index:2}
+.top{position:absolute;left:0;right:0;top:0;height:39px;z-index:6;display:flex;align-items:center;gap:6px;padding:4px 7px;background:rgba(11,17,27,.98);border-bottom:1px solid var(--line)}
+.drag-zone{display:flex;align-items:center;gap:7px;min-width:0;flex:1;min-height:30px;touch-action:none;cursor:move;user-select:none;-webkit-user-select:none}
+.badge{flex:0 0 28px;width:28px;height:28px;display:grid;place-items:center;border-radius:9px;background:rgba(88,175,255,.18);color:var(--blue);font-size:12px}
+.meta{min-width:0;flex:1}.meta strong,.meta small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.meta strong{font-size:12px;font-weight:750}.meta small{font-size:10px;color:var(--muted);margin-top:3px}
+.top-btn{width:28px;height:28px;flex:0 0 28px;border-radius:10px;background:rgba(17,24,36,.92);border:1px solid var(--line);font-size:12px;display:grid;place-items:center}
+.controls{position:absolute;left:0;right:0;bottom:0;height:54px;z-index:5;padding:4px 10px 5px;background:rgba(3,6,11,.97);transition:opacity .16s}
+.controls.hidden{opacity:0;pointer-events:none}.seek{display:block;width:100%;height:13px;margin:0 0 1px;accent-color:var(--blue);touch-action:pan-x}
+.row{display:flex;align-items:center;gap:6px}.ctrl{width:30px;height:30px;flex:0 0 30px;border-radius:10px;background:var(--panel);border:1px solid var(--line);font-size:11px;display:grid;place-items:center}
+.time{flex:1;min-width:0;text-align:center;white-space:nowrap;font-size:10px;color:var(--muted)}.speed{width:39px;height:30px;flex:0 0 39px;border-radius:10px;background:var(--panel);border:1px solid var(--line);font-size:10px;font-weight:700}
+.center{position:absolute;z-index:4;left:50%;top:50%;transform:translate(-50%,-50%);width:42px;height:42px;border-radius:15px;display:grid;place-items:center;background:rgba(255,255,255,.94);color:#1677c8;font-size:15px;box-shadow:0 5px 18px rgba(0,0,0,.3)}.center.hidden{display:none}
+.notice{position:absolute;z-index:9;left:50%;top:50%;transform:translate(-50%,-50%);padding:8px 11px;max-width:85%;border-radius:10px;background:rgba(13,19,29,.96);border:1px solid var(--line);font-size:11px;text-align:center;display:none}.notice.show{display:block}
+.hint{position:absolute;z-index:3;left:10px;top:43px;color:rgba(255,255,255,.62);font-size:9px;pointer-events:none;text-shadow:0 1px 2px #000}
+@media (max-width:260px){.top{padding-left:6px;padding-right:6px}.controls{padding-left:6px;padding-right:6px}.ctrl{width:26px;flex-basis:26px}.time{font-size:9px}.speed{width:34px;flex-basis:34px}}
+</style>
+</head>
+<body>
+<div id="root">
+  <video id="video" playsinline webkit-playsinline preload="metadata"></video>
+  <button id="surface" aria-label="Tampilkan atau sembunyikan kontrol"></button>
+  <button class="center" id="center" aria-label="Putar"><i class="fa-solid fa-play"></i></button>
+  <div class="top">
+    <div class="drag-zone" id="dragZone">
+      <span class="badge"><i class="fa-solid fa-play"></i></span>
+      <div class="meta"><strong id="title">AnimeGo</strong><small id="ep">Episode</small></div>
+    </div>
+    <button class="top-btn" id="return" aria-label="Kembali ke AnimeGo" title="Kembali ke aplikasi"><i class="fa-solid fa-arrow-up-right-from-square"></i></button>
+    <button class="top-btn" id="close" aria-label="Tutup pemutar" title="Tutup"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="controls" id="controls">
+    <input class="seek" id="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Posisi video">
+    <div class="row">
+      <button class="ctrl" id="backward" aria-label="Mundur 10 detik"><i class="fa-solid fa-backward-step"></i></button>
+      <button class="ctrl" id="play" aria-label="Putar atau jeda"><i class="fa-solid fa-play"></i></button>
+      <div class="time"><span id="now">00:00</span> / <span id="total">00:00</span></div>
+      <button class="ctrl" id="mute" aria-label="Senyapkan"><i class="fa-solid fa-volume-high"></i></button>
+      <button class="ctrl" id="forward" aria-label="Maju 10 detik"><i class="fa-solid fa-forward-step"></i></button>
+      <button class="speed" id="speed" aria-label="Kecepatan pemutaran">1×</button>
+    </div>
+  </div>
+  <div class="hint" id="hint">tekan lama untuk pindah · cubit dua jari untuk ubah ukuran</div>
+  <div class="notice" id="notice"></div>
+</div>
+<script>
+(function(){'use strict';
+var v=document.getElementById('video'),surface=document.getElementById('surface'),center=document.getElementById('center'),controls=document.getElementById('controls'),seek=document.getElementById('seek'),now=document.getElementById('now'),total=document.getElementById('total'),play=document.getElementById('play'),mute=document.getElementById('mute'),speed=document.getElementById('speed'),notice=document.getElementById('notice'),hint=document.getElementById('hint'),hideTimer=null,rates=[0.75,1,1.25,1.5,2],rateIndex=1,initialPosition=0,autoplayOnInit=false,pinchDistance=0,dragging=false,initialized=false;
+function icon(name){return '<i class="fa-solid fa-'+name+'"></i>';}
+function clock(value){var sec=Math.max(0,Math.floor(Number(value)||0)),min=Math.floor(sec/60);sec%=60;return (min<10?'0':'')+min+':'+(sec<10?'0':'')+sec;}
+function tellNative(){try{if(window.PopupBridge)PopupBridge.updateState(Number(v.currentTime)||0,Number(v.duration)||0,Number(v.playbackRate)||1,!v.paused,!!v.muted);}catch(e){}}
+function update(){var d=Number(v.duration)||0,p=Number(v.currentTime)||0;now.textContent=clock(p);total.textContent=clock(d);if(!seek.matches(':active'))seek.value=d?String(Math.round(p/d*1000)):'0';tellNative();}
+function setIcons(){play.innerHTML=icon(v.paused?'play':'pause');center.innerHTML=icon(v.paused?'play':'pause');center.classList.toggle('hidden',!v.paused);mute.innerHTML=icon(v.muted?'volume-xmark':'volume-high');}
+function show(){controls.classList.remove('hidden');clearTimeout(hideTimer);if(!v.paused)hideTimer=setTimeout(function(){if(!v.paused)controls.classList.add('hidden');},3200);}
+function toggleControls(){if(controls.classList.contains('hidden'))show();else if(!v.paused)controls.classList.add('hidden');else show();}
+function togglePlay(){if(v.paused)v.play().catch(function(){showNotice('Video tidak dapat diputar.');});else v.pause();setIcons();show();tellNative();}
+function skip(amount){try{v.currentTime=Math.max(0,Math.min(v.duration||Infinity,v.currentTime+amount));}catch(e){}show();tellNative();}
+function showNotice(text){notice.textContent=text;notice.classList.add('show');setTimeout(function(){notice.classList.remove('show');},1900);}
+function snapshot(){tellNative();}
+function distance(touches){var dx=touches[0].screenX-touches[1].screenX,dy=touches[0].screenY-touches[1].screenY;return Math.sqrt(dx*dx+dy*dy);}
+window.__popupInit=function(src,t,e,pos,dur,rate,muted,autoplay){if(initialized)return;initialized=true;document.getElementById('title').textContent=t||'AnimeGo';document.getElementById('ep').textContent='Episode '+(e||'');initialPosition=Math.max(0,Number(pos)||0);autoplayOnInit=!!autoplay;v.src=src||'';v.playbackRate=Number(rate)||1;v.muted=!!muted;for(var i=0;i<rates.length;i++)if(Math.abs(rates[i]-v.playbackRate)<0.01)rateIndex=i;speed.textContent=String(rates[rateIndex]).replace('.',',')+'×';v.addEventListener('loadedmetadata',function(){try{if(initialPosition>0)v.currentTime=Math.min(initialPosition,Math.max(0,v.duration-0.25));}catch(e){}update();setIcons();if(autoplayOnInit)v.play().catch(function(){showNotice('Tekan putar untuk melanjutkan.');});show();tellNative();});v.addEventListener('durationchange',update);v.addEventListener('timeupdate',update);v.addEventListener('play',function(){setIcons();show();tellNative();});v.addEventListener('pause',function(){setIcons();show();tellNative();});v.addEventListener('volumechange',function(){setIcons();tellNative();});v.addEventListener('ratechange',tellNative);v.addEventListener('error',function(){showNotice('Sumber video tidak dapat dibuka di popup.');setIcons();});v.addEventListener('ended',function(){setIcons();tellNative();});update();setIcons();};
+document.getElementById('return').onclick=function(e){e.stopPropagation();snapshot();try{PopupBridge.returnToApp(Number(v.currentTime)||0,Number(v.duration)||0,Number(v.playbackRate)||1,!v.paused,!!v.muted);}catch(err){showNotice('Tidak dapat kembali ke aplikasi.');}};
+document.getElementById('close').onclick=function(e){e.stopPropagation();try{PopupBridge.closeWithState(Number(v.currentTime)||0,Number(v.duration)||0,Number(v.playbackRate)||1,!v.paused,!!v.muted);}catch(err){}};
+surface.onclick=function(){toggleControls();};center.onclick=function(e){e.stopPropagation();togglePlay();};play.onclick=function(e){e.stopPropagation();togglePlay();};mute.onclick=function(e){e.stopPropagation();v.muted=!v.muted;setIcons();show();tellNative();};document.getElementById('backward').onclick=function(e){e.stopPropagation();skip(-10);};document.getElementById('forward').onclick=function(e){e.stopPropagation();skip(10);};seek.oninput=function(){if(v.duration>0)v.currentTime=Number(this.value)/1000*v.duration;show();};speed.onclick=function(e){e.stopPropagation();rateIndex=(rateIndex+1)%rates.length;v.playbackRate=rates[rateIndex];speed.textContent=String(rates[rateIndex]).replace('.',',')+'×';show();tellNative();};
+document.addEventListener('visibilitychange',function(){if(document.hidden)snapshot();});window.addEventListener('pagehide',snapshot);setTimeout(function(){hint.style.opacity='0';},5500);
+})();
+</script>
+</body>
+</html>

@@ -15,6 +15,7 @@ import app.animego.inc.api.ApiService;
 import app.animego.inc.db.DatabaseHelper;
 import app.animego.inc.download.DownloadService;
 import app.animego.inc.LandscapePlayerActivity;
+import app.animego.inc.FloatingPlayerService;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -24,9 +25,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
+import app.animego.inc.*;
 
 public class JsBridge implements app.animego.inc.api.ApiClient.BrowserFetcher {
     public static final int REQUEST_LANDSCAPE = 3407;
+    public static final int REQUEST_OVERLAY_PERMISSION = 3408;
+    private JSONObject pendingFloatingPayload;
     private final Context context;
     private final WebView webView;
     private final DatabaseHelper db;
@@ -141,6 +145,7 @@ public class JsBridge implements app.animego.inc.api.ApiClient.BrowserFetcher {
         if ("schedule".equals(action)) return api.getSchedule(p.optString("day", "senin"), p.optInt("page", 1), p.optInt("limit", 12));
         if ("orientation".equals(action)) return new JSONObject().put("mode", p.optString("mode", "normal"));
         if ("landscape_player".equals(action)) return launchLandscapePlayer(p);
+        if ("floating_player".equals(action)) return launchFloatingPlayer(p);
         if ("theme".equals(action)) { setThemeBars(p.optBoolean("dark", true)); return new JSONObject().put("dark", p.optBoolean("dark", true)); }
 
         if ("favorites".equals(action)) return new JSONObject().put("items", db.getFavorites());
@@ -185,6 +190,61 @@ public class JsBridge implements app.animego.inc.api.ApiClient.BrowserFetcher {
             }
         });
         return new JSONObject().put("launched", true);
+    }
+
+    private JSONObject launchFloatingPlayer(final JSONObject payload) throws Exception {
+        if (payload.optString("url", "").length() == 0) throw new Exception("Tautan video kosong.");
+        if (Build.VERSION.SDK_INT >= 23 && !android.provider.Settings.canDrawOverlays(context)) {
+            if (!(context instanceof Activity)) throw new Exception("Izin overlay tidak tersedia.");
+            pendingFloatingPayload = new JSONObject(payload.toString());
+            final Activity activity = (Activity) context;
+            activity.runOnUiThread(new Runnable() {
+                @Override public void run() {
+                    try {
+                        Intent settings = new Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                Uri.parse("package:" + activity.getPackageName()));
+                        activity.startActivityForResult(settings, REQUEST_OVERLAY_PERMISSION);
+                    } catch (Exception e) {
+                        pendingFloatingPayload = null;
+                        MainActivity.notifyFloatingFailed();
+                    }
+                }
+            });
+            return new JSONObject().put("pendingPermission", true);
+        }
+        startFloatingService(payload);
+        return new JSONObject().put("started", true);
+    }
+
+    private void startFloatingService(JSONObject payload) throws Exception {
+        Intent intent = new Intent(context, FloatingPlayerService.class);
+        intent.setAction(FloatingPlayerService.ACTION_SHOW);
+        intent.putExtra("url", payload.optString("url", ""));
+        intent.putExtra("slug", payload.optString("slug", ""));
+        intent.putExtra("title", payload.optString("title", "AnimeGo"));
+        intent.putExtra("ep", payload.optString("ep", "Episode"));
+        intent.putExtra("cover", payload.optString("cover", ""));
+        intent.putExtra("offline", payload.optBoolean("offline", false));
+        intent.putExtra("position", payload.optDouble("position", 0));
+        intent.putExtra("duration", payload.optDouble("duration", 0));
+        intent.putExtra("rate", (float) payload.optDouble("rate", 1));
+        intent.putExtra("muted", payload.optBoolean("muted", false));
+        intent.putExtra("playing", payload.optBoolean("playing", true));
+        if (Build.VERSION.SDK_INT >= 26) context.startForegroundService(intent);
+        else context.startService(intent);
+    }
+
+    public void onOverlayPermissionResult() {
+        JSONObject payload = pendingFloatingPayload;
+        pendingFloatingPayload = null;
+        if (Build.VERSION.SDK_INT < 23 || android.provider.Settings.canDrawOverlays(context)) {
+            if (payload != null) {
+                try { startFloatingService(payload); }
+                catch (Exception e) { MainActivity.notifyFloatingFailed(); }
+            }
+        } else {
+            MainActivity.notifyFloatingFailed();
+        }
     }
 
     private void setThemeBars(final boolean dark) {

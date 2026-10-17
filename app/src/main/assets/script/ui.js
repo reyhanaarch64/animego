@@ -30,7 +30,7 @@
         clock: 'fa-solid fa-clock-rotate-left', movie: 'fa-solid fa-film', fire: 'fa-solid fa-fire',
         star: 'fa-solid fa-star', arrow: 'fa-solid fa-arrow-right', retry: 'fa-solid fa-rotate-right',
         folder: 'fa-solid fa-folder-open', info: 'fa-solid fa-circle-info', skull: 'fa-solid fa-skull', close: 'fa-solid fa-xmark',
-        external: 'fa-solid fa-arrow-up-right-from-square', shield: 'fa-solid fa-shield-halved',
+        external: 'fa-solid fa-arrow-up-right-from-square', floating: 'fa-solid fa-clone', shield: 'fa-solid fa-shield-halved',
         chevron: 'fa-solid fa-chevron-right', tag: 'fa-solid fa-tag'
       };
       return '<i class="' + (map[name] || 'fa-solid fa-circle') + '" aria-hidden="true"></i>';

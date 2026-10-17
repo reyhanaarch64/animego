@@ -11,6 +11,7 @@
     state: null,
     fullscreenMode: null,
     landscapeLaunching: false,
+    floatingLaunching: false,
 
     findIndex: function (eps, ep) {
       for (var i = 0; i < eps.length; i++) if (String(eps[i].name) === String(ep)) return i;
@@ -71,7 +72,7 @@
       var wrap = document.createElement('div');
       wrap.className = 'player-wrap';
       wrap.id = 'videoWrap';
-      wrap.innerHTML = '<div class="video-box" id="videoBox"><video id="video" playsinline webkit-playsinline preload="metadata" src="' + RH.ui.esc(src) + '"></video><button class="player-surface" id="playerSurface" aria-label="Tampilkan atau sembunyikan kontrol"></button><button class="player-center" id="playerCenter" aria-label="Putar">' + RH.ui.icon('play') + '</button><div class="player-top-controls"><button class="player-icon" id="portraitFullBtn" aria-label="Layar penuh vertikal">' + RH.ui.icon('fullscreen') + '</button><button class="player-icon" id="landscapeFullBtn" aria-label="Layar penuh horizontal">' + RH.ui.icon('landscape') + '</button><button class="player-icon exit-full-btn" id="exitFullBtn" aria-label="Keluar layar penuh">' + RH.ui.icon('minimize') + '</button></div><div class="player-controls"><input class="player-seek" id="playerSeek" type="range" min="0" max="1000" value="0" step="1" aria-label="Posisi video"><div class="player-bottom"><button class="player-icon player-mini" id="rewindBtn" aria-label="Mundur 10 detik">' + RH.ui.icon('backward') + '</button><button class="player-icon player-mini" id="playerPlay" aria-label="Putar atau jeda">' + RH.ui.icon('play') + '</button><span class="player-time"><span id="currentTime">00:00</span> / <span id="totalTime">00:00</span></span><button class="player-icon player-mini" id="muteBtn" aria-label="Senyapkan">' + RH.ui.icon('volume') + '</button><button class="player-icon player-mini" id="forwardBtn" aria-label="Maju 10 detik">' + RH.ui.icon('forward') + '</button></div></div><div id="videoError" class="overlay-error"></div><div class="mini-overlay"><button class="mini-surface" id="miniSurface" aria-label="Putar atau jeda video mini"></button><div class="mini-top"><div class="mini-info"><strong id="miniTitle">' + RH.ui.esc(a.title) + '</strong><small id="miniEpisode">Episode ' + RH.ui.esc(current.name) + '</small></div><div class="mini-actions"><button class="mini-icon" id="miniOpen" aria-label="Buka halaman tontonan">' + RH.ui.icon('expand') + '</button><button class="mini-icon" id="miniClose" aria-label="Tutup pemutar mini">' + RH.ui.icon('close') + '</button></div></div><button class="mini-play" id="miniPlay" aria-label="Putar atau jeda">' + RH.ui.icon('play') + '</button></div></div>';
+      wrap.innerHTML = '<div class="video-box" id="videoBox"><video id="video" playsinline webkit-playsinline preload="metadata" src="' + RH.ui.esc(src) + '"></video><button class="player-surface" id="playerSurface" aria-label="Tampilkan atau sembunyikan kontrol"></button><button class="player-center" id="playerCenter" aria-label="Putar">' + RH.ui.icon('play') + '</button><div class="player-top-controls"><button class="player-icon" id="portraitFullBtn" aria-label="Layar penuh vertikal">' + RH.ui.icon('fullscreen') + '</button><button class="player-icon" id="landscapeFullBtn" aria-label="Layar penuh horizontal">' + RH.ui.icon('landscape') + '</button><button class="player-icon" id="floatingPlayerBtn" aria-label="Pemutar mengambang">' + RH.ui.icon('floating') + '</button><button class="player-icon exit-full-btn" id="exitFullBtn" aria-label="Keluar layar penuh">' + RH.ui.icon('minimize') + '</button></div><div class="player-controls"><input class="player-seek" id="playerSeek" type="range" min="0" max="1000" value="0" step="1" aria-label="Posisi video"><div class="player-bottom"><button class="player-icon player-mini" id="rewindBtn" aria-label="Mundur 10 detik">' + RH.ui.icon('backward') + '</button><button class="player-icon player-mini" id="playerPlay" aria-label="Putar atau jeda">' + RH.ui.icon('play') + '</button><span class="player-time"><span id="currentTime">00:00</span> / <span id="totalTime">00:00</span></span><button class="player-icon player-mini" id="muteBtn" aria-label="Senyapkan">' + RH.ui.icon('volume') + '</button><button class="player-icon player-mini" id="forwardBtn" aria-label="Maju 10 detik">' + RH.ui.icon('forward') + '</button></div></div><div id="videoError" class="overlay-error"></div><div class="mini-overlay"><button class="mini-surface" id="miniSurface" aria-label="Putar atau jeda video mini"></button><div class="mini-top"><div class="mini-info"><strong id="miniTitle">' + RH.ui.esc(a.title) + '</strong><small id="miniEpisode">Episode ' + RH.ui.esc(current.name) + '</small></div><div class="mini-actions"><button class="mini-icon" id="miniOpen" aria-label="Buka halaman tontonan">' + RH.ui.icon('expand') + '</button><button class="mini-icon" id="miniClose" aria-label="Tutup pemutar mini">' + RH.ui.icon('close') + '</button></div></div><button class="mini-play" id="miniPlay" aria-label="Putar atau jeda">' + RH.ui.icon('play') + '</button></div></div>';
       host.appendChild(wrap);
       this.wrap = wrap;
       this.video = wrap.querySelector('#video');
@@ -90,6 +91,7 @@
       var muteBtn = wrap.querySelector('#muteBtn');
       var portraitBtn = wrap.querySelector('#portraitFullBtn');
       var landscapeBtn = wrap.querySelector('#landscapeFullBtn');
+      var floatingBtn = wrap.querySelector('#floatingPlayerBtn');
       var exitFullBtn = wrap.querySelector('#exitFullBtn');
       var surface = wrap.querySelector('#playerSurface');
       var miniPlay = wrap.querySelector('#miniPlay');
@@ -225,6 +227,7 @@
       };
       if (portraitBtn) portraitBtn.onclick = function (e) { e.stopPropagation(); self.enterFullscreen('portrait'); };
       if (landscapeBtn) landscapeBtn.onclick = function (e) { e.stopPropagation(); self.openLandscape(); };
+      if (floatingBtn) floatingBtn.onclick = function (e) { e.stopPropagation(); self.openFloating(); };
       if (exitFullBtn) exitFullBtn.onclick = function (e) { e.stopPropagation(); self.exitFullscreen(); self.showControls(); };
 
       if (miniSurface) miniSurface.onclick = function (e) { e.stopPropagation(); togglePlay(); };
@@ -342,6 +345,80 @@
       var self = this;
     },
 
+    openFloating: function () {
+      if (!this.video || !this.state || this.floatingLaunching || this.landscapeLaunching) return;
+      var video = this.video;
+      var src = video.currentSrc || video.src || this.state.src || '';
+      if (!src || src.indexOf('blob:') === 0) {
+        RH.ui.toast('Sumber video ini tidak bisa dipindahkan ke pemutar mengambang.');
+        return;
+      }
+      this.floatingLaunching = true;
+      this.state.wasPlayingBeforeFloating = !video.paused;
+      this.state.position = Number(video.currentTime) || 0;
+      this.state.duration = Number(video.duration) || 0;
+      var payload = {
+        url: src,
+        slug: this.state.slug,
+        title: this.state.title,
+        ep: this.state.ep,
+        cover: this.state.cover,
+        offline: !!this.state.offline,
+        position: this.state.position,
+        duration: this.state.duration,
+        rate: Number(video.playbackRate) || 1,
+        muted: !!video.muted,
+        playing: !!this.state.wasPlayingBeforeFloating
+      };
+      try { video.pause(); } catch (e) {}
+      if (this.save) this.save();
+      var self = this;
+      RH.native('floating_player', payload).then(function (result) {
+        if (result && result.pendingPermission) {
+          RH.ui.toast('Izinkan AnimeGo tampil di atas aplikasi lain; popup akan dibuka setelahnya.');
+        } else if (!result || !result.started) {
+          self.onFloatingFailed();
+          RH.ui.toast('Pemutar mengambang tidak dapat dibuka.');
+        }
+      }).catch(function (error) {
+        self.onFloatingFailed();
+        RH.ui.toast(error.message || 'Pemutar mengambang tidak dapat dibuka.');
+      });
+    },
+
+    onFloatingFailed: function () {
+      this.floatingLaunching = false;
+      if (!this.video || !this.state) return;
+      if (this.state.wasPlayingBeforeFloating) this.video.play().catch(function () {});
+      this.showControls();
+    },
+
+    onFloatingResult: function (position, duration, rate, playing, muted) {
+      this.floatingLaunching = false;
+      if (!this.video || !this.state) return;
+      var self = this;
+      var pos = Math.max(0, Number(position) || 0);
+      var dur = Math.max(0, Number(duration) || 0);
+      var speed = Number(rate) || 1;
+      function applyState() {
+        if (!self.video) return;
+        try {
+          if (dur > 0 && isFinite(self.video.duration)) pos = Math.min(pos, Math.max(0, self.video.duration - 0.25));
+          self.video.currentTime = pos;
+          self.video.playbackRate = speed;
+          self.video.muted = !!muted;
+        } catch (e) {}
+        self.state.position = pos;
+        self.state.duration = dur;
+        if (playing) self.video.play().catch(function () {});
+        else self.video.pause();
+        self.showControls();
+        if (self.save) self.save();
+      }
+      if (this.video.readyState >= 1) applyState();
+      else this.video.addEventListener('loadedmetadata', applyState, { once: true });
+    },
+
     onLandscapeCancel: function () {
       this.landscapeLaunching = false;
       if (!this.video || !this.state) return;
@@ -392,6 +469,7 @@
       this.state = null;
       this.fullscreenMode = null;
       this.landscapeLaunching = false;
+      this.floatingLaunching = false;
       this.hideDock();
       this.exitFullscreen();
     }
